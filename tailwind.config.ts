@@ -8,7 +8,15 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      colors: {
+        primary: {
+          DEFAULT: "#075FF0",
+          dark: "#0048E8",
+          light: "#168BFD",
+        },
+      },
       backgroundImage: {
+        'brand-gradient': 'var(--brand-gradient)',
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic':
           'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',

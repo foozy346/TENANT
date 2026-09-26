@@ -18,7 +18,20 @@ const Providers = ({ children }: PropsWithChildren) => {
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
         <EdgeStoreProvider>
-          <Toaster position="bottom-right"/>
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              error: {
+                iconTheme: {
+                  primary: "var(--primary)",
+                  secondary: "#fff",
+                },
+                style: {
+                  border: "1px solid var(--primary-light)",
+                },
+              },
+            }}
+          />
           {children}
         </EdgeStoreProvider>
       </SessionProvider>

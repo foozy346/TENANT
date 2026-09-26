@@ -58,7 +58,7 @@ const Search = () => {
               <small className="hidden sm:block font-normal text-sm">
                 {guestLabel}
               </small>
-              <div className="p-2  bg-rose-500 rounded-full  text-white">
+              <div className="p-2 bg-brand-gradient rounded-full text-white">
                 <FaSearch className="text-[12px] " />
               </div>
             </div>

@@ -59,8 +59,8 @@ const CountrySelect = ({
         borderRadius: 6,
         colors: {
           ...theme.colors,
-          primary: "black",
-          primary25: "#ffe4e6",
+          primary: "var(--primary)",
+          primary25: "#eaf3ff",
         },
       })}
     />

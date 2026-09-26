@@ -1,4 +1,4 @@
-# Airbnb Clone
+# TENANT
 
 This is an Airbnb clone built with Next.js, TypeScript, Tailwind CSS, MongoDB, Prisma, Next auth, Leaflet and many other technologies.
 
@@ -16,7 +16,7 @@ You can check out a live demo of the Airbnb clone project [here](https://airbnb-
 
 ## Screenshots
 
-<kbd><img width="944" alt="vacationhub" src="https://github.com/sudeepmahato16/airbnb_clone/assets/122378993/f893e203-8a2d-4ff1-ae20-67e64187b770"></kbd>
+<kbd><img width="944" alt="TENANT" src="https://github.com/sudeepmahato16/airbnb_clone/assets/122378993/f893e203-8a2d-4ff1-ae20-67e64187b770"></kbd>
 
 <kbd><img width="886" alt="login-modal" src="https://github.com/sudeepmahato16/airbnb_clone/assets/122378993/3d6675e0-6046-48dc-b55f-7ef318581ccd"></kbd>
 
@@ -35,13 +35,13 @@ Make sure you have the following software installed on your system:
 - Clone the repository:
 
   ```
-  git clone https://github.com/sudeepmahato16/airbnb_clone.git
+  git clone https://github.com/foozy346/TENANT.git
   ```
 
 - Navigate to the project directory:
 
   ```
-  cd Airbnb
+  cd TENANT
   ```
 
 - Install the dependencies:

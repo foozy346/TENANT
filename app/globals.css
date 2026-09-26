@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 :root {
+  --primary: #075ff0;
+  --primary-dark: #0048e8;
+  --primary-light: #168bfd;
+  --brand-gradient: linear-gradient(135deg, #0048e8 0%, #168bfd 100%);
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
@@ -57,15 +61,17 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-rose-400 transition-all duration-300 rounded-[25px];
+  background-color: var(--primary-light);
+  @apply transition-all duration-300 rounded-[25px];
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-rose-500;
+  background-color: var(--primary);
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-rose-100 rounded-[25px];
+  background-color: color-mix(in srgb, var(--primary-light) 10%, white);
+  @apply rounded-[25px];
 }
 
 ::-webkit-scrollbar-corner {
@@ -74,4 +80,9 @@ body {
 
 .hide-scrollbar::-webkit-scrollbar {
   width: 0;
+}
+
+
+.bg-brand-gradient {
+  background-color: var(--primary);
 }

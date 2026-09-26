@@ -6,7 +6,7 @@ const Logo = () => {
   return (
     <Link href="/" className="h-[35px] w-[150px] relative hidden md:block ">
       <Image
-        src="/images/vacationhub.png"
+        src="/images/TENANT.png"
         alt="logo"
         fill
         sizes="150px"
@@ -14,6 +14,7 @@ const Logo = () => {
         unoptimized
       />
     </Link>
+
   );
 };
 

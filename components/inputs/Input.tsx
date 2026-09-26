@@ -43,8 +43,8 @@ const Input: React.FC<InputProps> = ({
         className={cn(
           `text-[15px] peer w-full px-2 py-3 font-light bg-white border-[1px] border-gray-400 rounded outline-none transition disabled:opacity-70 disabled:cursor-not-allowed`,
           errors[id]
-            ? "border-rose-500 focus:border-rose-500"
-            : "border-neutral-300 focus:border-black",
+            ? "border-red-500 focus:border-red-500"
+            : "border-neutral-300 focus:border-primary",
           Icon ? "pl-9" : "pl-4"
         )}
         autoFocus={autoFocus}
@@ -53,7 +53,7 @@ const Input: React.FC<InputProps> = ({
       <label
         className={cn(
           `absolute  text-[14px] duration-150  transform  top-[28px] scale-80 -translate-y-4 origin-[0] peer-placeholder-shown:scale-100  peer-placeholder-shown:translate-y-0  peer-focus:scale-80 peer-focus:-translate-y-[40px] peer-focus:bg-[#fff] z-[20] px-1 `,
-          errors[id] ? "text-rose-500" : "text-zinc-400",
+          errors[id] ? "text-red-500" : "text-zinc-400",
           value && "-translate-y-[40px] bg-[#fff]",
           Icon ? "left-9" : "left-4"
         )}
