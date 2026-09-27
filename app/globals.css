@@ -36,7 +36,7 @@ body {
 }
 
 .swiper-wrapper {
-  @apply md:gap-2 gap-1 justify-between;
+  @apply md:gap-2 gap-1 justify-around;
 }
 
 .leaflet-bottom,

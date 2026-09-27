@@ -14,7 +14,7 @@ const sampleListings = [
     title: "Pacific View House",
     description: "A bright coastal home with an open terrace and views of the Pacific.",
     imageSrc: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1400&q=85",
-    category: "Beach",
+    category: "Villas",
     roomCount: 3,
     bathroomCount: 2,
     guestCount: 6,
@@ -27,7 +27,7 @@ const sampleListings = [
     title: "Stone Terrace in Positano",
     description: "A quiet hillside stay with a sunlit terrace above the Amalfi Coast.",
     imageSrc: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&w=1400&q=85",
-    category: "Lux",
+    category: "Apartments",
     roomCount: 2,
     bathroomCount: 2,
     guestCount: 4,
@@ -40,7 +40,7 @@ const sampleListings = [
     title: "Kyoto Garden Machiya",
     description: "A restored wooden townhouse arranged around a peaceful private garden.",
     imageSrc: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1400&q=85",
-    category: "Modern",
+    category: "Studios",
     roomCount: 2,
     bathroomCount: 1,
     guestCount: 4,
@@ -53,7 +53,7 @@ const sampleListings = [
     title: "Ubud Poolside Retreat",
     description: "A leafy retreat with a private pool and an outdoor dining pavilion.",
     imageSrc: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1400&q=85",
-    category: "Pools",
+    category: "Villas",
     roomCount: 3,
     bathroomCount: 2,
     guestCount: 6,
@@ -66,7 +66,7 @@ const sampleListings = [
     title: "Banff Alpine Cabin",
     description: "A timber cabin with mountain views, a fireplace, and nearby hiking trails.",
     imageSrc: "https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?auto=format&fit=crop&w=1400&q=85",
-    category: "Skiing",
+    category: "Chalets",
     roomCount: 2,
     bathroomCount: 1,
     guestCount: 4,
@@ -93,16 +93,25 @@ async function main() {
   }
 
   let created = 0;
+  let updated = 0;
   let skipped = 0;
 
   for (const listing of sampleListings) {
     const existing = await prisma.listing.findFirst({
       where: { userId: host.id, title: listing.title },
-      select: { id: true },
+      select: { id: true, category: true },
     });
 
     if (existing) {
-      skipped += 1;
+      if (existing.category !== listing.category) {
+        await prisma.listing.update({
+          where: { id: existing.id },
+          data: { category: listing.category },
+        });
+        updated += 1;
+      } else {
+        skipped += 1;
+      }
       continue;
     }
 
@@ -112,7 +121,9 @@ async function main() {
     created += 1;
   }
 
-  console.log(`Seed complete: ${created} listings created, ${skipped} already existed.`);
+  console.log(
+    `Seed complete: ${created} listings created, ${updated} updated, ${skipped} unchanged.`
+  );
 }
 
 main()
