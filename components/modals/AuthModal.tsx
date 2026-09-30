@@ -1,6 +1,5 @@
 "use client";
 import React, { useTransition, useState, useEffect } from "react";
-import { AiFillGithub } from "react-icons/ai";
 import { FcGoogle } from "react-icons/fc";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { signIn } from "next-auth/react";
@@ -108,7 +107,7 @@ const AuthModal = ({
         onSubmit={handleSubmit(onSubmit)}
       >
         <Heading
-          title={!isLoginModal ? "Welcome to Airbnb" : "Welcome back"}
+          title={!isLoginModal ? "Welcome to TENANT" : "Welcome back"}
           subtitle={
             title === "Sign up"
               ? "Create an account!"
@@ -166,14 +165,7 @@ const AuthModal = ({
           <FcGoogle className="w-6 h-6" />
           <span className="text-[14px]">Continue with Google</span>
         </Button>
-        <Button
-          outline
-          onClick={() => signIn("github")}
-          className="flex flex-row justify-center gap-2 items-center px-3 py-2"
-        >
-          <AiFillGithub className="w-6 h-6" />
-          <span className="text-[14px]">Continue with Github</span>
-        </Button>
+
         <div
           className="
             text-neutral-500 
@@ -186,7 +178,7 @@ const AuthModal = ({
             <small className="text-[15px]">
               {!isLoginModal
                 ? "Already have an account?"
-                : "First time using Airbnb?"}
+                : "First time using TENANT?"}
             </small>
             <button
               type="button"

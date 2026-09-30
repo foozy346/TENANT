@@ -9,120 +9,123 @@ if (process.env.DATABASE_URL) {
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-const sampleListings = [
-  {
-    title: "Pacific View House",
-    description: "A bright coastal home with an open terrace and views of the Pacific.",
-    imageSrc: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1400&q=85",
-    category: "Villas",
-    roomCount: 3,
-    bathroomCount: 2,
-    guestCount: 6,
-    price: 285,
-    country: "United States",
-    region: "California",
-    latlng: [34, -118],
-  },
-  {
-    title: "Stone Terrace in Positano",
-    description: "A quiet hillside stay with a sunlit terrace above the Amalfi Coast.",
-    imageSrc: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&w=1400&q=85",
-    category: "Apartments",
-    roomCount: 2,
-    bathroomCount: 2,
-    guestCount: 4,
-    price: 340,
-    country: "Italy",
-    region: "Campania",
-    latlng: [40, 14],
-  },
-  {
-    title: "Kyoto Garden Machiya",
-    description: "A restored wooden townhouse arranged around a peaceful private garden.",
-    imageSrc: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1400&q=85",
-    category: "Studios",
-    roomCount: 2,
-    bathroomCount: 1,
-    guestCount: 4,
-    price: 165,
-    country: "Japan",
-    region: "Kyoto",
-    latlng: [35, 136],
-  },
-  {
-    title: "Ubud Poolside Retreat",
-    description: "A leafy retreat with a private pool and an outdoor dining pavilion.",
-    imageSrc: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1400&q=85",
-    category: "Villas",
-    roomCount: 3,
-    bathroomCount: 2,
-    guestCount: 6,
-    price: 210,
-    country: "Indonesia",
-    region: "Bali",
-    latlng: [-8, 115],
-  },
-  {
-    title: "Banff Alpine Cabin",
-    description: "A timber cabin with mountain views, a fireplace, and nearby hiking trails.",
-    imageSrc: "https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?auto=format&fit=crop&w=1400&q=85",
-    category: "Chalets",
-    roomCount: 2,
-    bathroomCount: 1,
-    guestCount: 4,
-    price: 230,
-    country: "Canada",
-    region: "Alberta",
-    latlng: [51, -115],
-  },
+const areas = require("../data/countries.json");
+const photos = [
+  "photo-1522708323590-d24dbb6b0267",
+  "photo-1502672260266-1c1ef2d93688",
+  "photo-1494526585095-c41746248156",
+  "photo-1505693416388-ac5ce068fe85",
+  "photo-1484154218962-a197022b5858",
+  "photo-1493809842364-78817add7ffb",
+];
+const titleStyles = ["Sunny", "Sea-view", "Modern", "Bright", "Corniche", "Cozy"];
+const descriptionStyles = [
+  "A welcoming apartment with a bright living area and a practical kitchen.",
+  "A comfortable city stay with a furnished balcony and easy local access.",
+  "A recently refreshed home with airy rooms and thoughtful essentials.",
+  "A relaxed coastal base with comfortable furnishings and plenty of daylight.",
+  "A well-kept apartment near neighborhood cafes, shops, and the waterfront.",
 ];
 
-async function main() {
-  let host = await prisma.user.findUnique({
-    where: { email: "sample-host@example.test" },
-  });
+const randomItem = (items) => items[Math.floor(Math.random() * items.length)];
+const randomInteger = (min, max) =>
+  Math.floor(Math.random() * (max - min + 1)) + min;
 
-  if (!host) {
-    host = await prisma.user.create({
-      data: {
-        name: "Sample Host",
-        email: "sample-host@example.test",
-        image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&h=256&q=80",
-      },
-    });
+const sampleListings = areas.map((area) => ({
+  title: `${randomItem(titleStyles)} Apartment in ${area.label}`,
+  description: randomItem(descriptionStyles),
+  imageSrc: `https://images.unsplash.com/${randomItem(photos)}?auto=format&fit=crop&w=1400&q=85`,
+  category: "Apartments",
+  roomCount: randomInteger(1, 4),
+  bathroomCount: randomInteger(1, 3),
+  guestCount: randomInteger(2, 8),
+  price: randomInteger(1500, 12000),
+  country: area.label,
+  region: area.region,
+  latlng: area.latlng,
+}));
+
+async function main() {
+  const resetDatabase = process.argv.includes("--reset");
+  const updateDemoPrices = process.argv.includes("--update-demo-prices");
+
+  if (!resetDatabase && !updateDemoPrices) {
+    throw new Error(
+      "Choose --reset to replace all application data, or --update-demo-prices to update only the Alexandria demo listings."
+    );
   }
 
-  let created = 0;
-  let updated = 0;
-  let skipped = 0;
+  await prisma.$connect();
 
-  for (const listing of sampleListings) {
-    const existing = await prisma.listing.findFirst({
-      where: { userId: host.id, title: listing.title },
-      select: { id: true, category: true },
+  if (updateDemoPrices) {
+    const host = await prisma.user.findUnique({
+      where: { email: "alexandria-host@example.test" },
     });
 
-    if (existing) {
-      if (existing.category !== listing.category) {
-        await prisma.listing.update({
-          where: { id: existing.id },
-          data: { category: listing.category },
-        });
-        updated += 1;
-      } else {
-        skipped += 1;
-      }
-      continue;
+    if (!host) {
+      throw new Error("Alexandria demo host was not found; no prices were changed.");
     }
 
-    await prisma.listing.create({
-      data: { ...listing, userId: host.id },
-    });
-    created += 1;
+    let updated = 0;
+
+    for (const area of areas) {
+      const listing = await prisma.listing.findFirst({
+        where: {
+          userId: host.id,
+          category: "Apartments",
+          country: area.label,
+        },
+        select: { id: true },
+      });
+
+      if (listing) {
+        await prisma.listing.update({
+          where: { id: listing.id },
+          data: { price: randomInteger(1500, 12000) },
+        });
+        updated += 1;
+      }
+    }
+
+    console.log(`Updated ${updated} Alexandria demo listing prices to EGP.`);
+    return;
   }
 
+  const result = await prisma.$transaction(
+    async (transaction) => {
+      const removed = {
+        reservations: await transaction.reservation.count(),
+        accounts: await transaction.account.count(),
+        listings: await transaction.listing.count(),
+        users: await transaction.user.count(),
+      };
+
+      await transaction.reservation.deleteMany();
+      await transaction.account.deleteMany();
+      await transaction.listing.deleteMany();
+      await transaction.user.deleteMany();
+
+      const host = await transaction.user.create({
+        data: {
+          name: "Alexandria Sample Host",
+          email: "alexandria-host@example.test",
+          image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&h=256&q=80",
+        },
+      });
+
+      for (const listing of sampleListings) {
+        await transaction.listing.create({
+          data: { ...listing, userId: host.id },
+        });
+      }
+
+      return removed;
+    },
+    { maxWait: 15000, timeout: 120000 }
+  );
+
   console.log(
-    `Seed complete: ${created} listings created, ${updated} updated, ${skipped} unchanged.`
+    `Reset complete for TENANT: removed ${result.users} users, ${result.accounts} accounts, ${result.listings} listings, and ${result.reservations} reservations; created 1 sample host and ${sampleListings.length} Alexandria apartments.`
   );
 }
 

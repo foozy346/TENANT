@@ -49,6 +49,11 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
               </button>
             </Menu.Toggle>
             <Menu.List className="shadow-[0_0_36px_4px_rgba(0,0,0,0.075)] rounded-xl bg-white text-sm">
+              <MenuItem
+                label="Apartment map"
+                onClick={() => redirect("/map")}
+              />
+              <hr />
               {user ? (
                 <>
                   {menuItems.map((item) => (

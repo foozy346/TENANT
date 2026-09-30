@@ -1,7 +1,7 @@
 "use client";
-import React, { useMemo } from "react";
+import React from "react";
 import dynamic from "next/dynamic";
-import { differenceInDays } from "date-fns";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FaSearch } from "react-icons/fa";
 
@@ -13,58 +13,31 @@ const SearchModal = dynamic(() => import("@/components/modals/SearchModal"), {
 
 const Search = () => {
   const searchParams = useSearchParams();
-
-  const country = searchParams?.get("country");
-
-  const startDate = searchParams?.get("startDate");
-  const endDate = searchParams?.get("endDate");
   const guestCount = searchParams?.get("guestCount");
-
-  const durationLabel = useMemo(() => {
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      let diff = differenceInDays(end, start);
-
-      if (diff === 0) {
-        diff = 1;
-      }
-
-      return `${diff} Days`;
-    }
-
-    return "Any week";
-  }, [endDate, startDate]);
-
-  const guestLabel = guestCount ? `${guestCount} Guests` : "Add Guests";
+  const guestLabel = guestCount ? `${guestCount} Guests` : "Search";
 
   return (
     <Modal>
-      <Modal.Trigger name="search">
-        <button
-          type="button"
-          className="border-[1px] w-full md:w-auto py-2 rounded-full shadow-sm hover:shadow-md transition duration-300 cursor-pointer"
+      <div className="flex w-full items-center rounded-full border-[1px] shadow-sm transition duration-300 hover:shadow-md md:w-auto">
+        <Link
+          href="/map"
+          className="flex items-center px-5 py-2 text-sm font-bold text-primary"
         >
-          <div className="flex flex-row justify-between items-center">
-            <small className="text-sm font-bold px-6 text-[#585858]">
-              {country ? country : "Anywhere"}
-            </small>
-
-            <small className="hidden sm:block text-sm font-bold px-6 border-x-[1px] flex-1 text-center text-[#585858]">
-              {durationLabel}
-            </small>
-
-            <div className="text-sm pl-6 pr-2 text-gray-600 flex flex-row items-center gap-4">
+          Map
+        </Link>
+        <Modal.Trigger name="search">
+          <button type="button" className="rounded-full py-1 pl-4 pr-2">
+            <div className="flex flex-row items-center gap-4 text-sm text-gray-600">
               <small className="hidden sm:block font-normal text-sm">
                 {guestLabel}
               </small>
               <div className="p-2 bg-brand-gradient rounded-full text-white">
-                <FaSearch className="text-[12px] " />
+                <FaSearch aria-hidden="true" className="text-[12px]" />
               </div>
             </div>
-          </div>
-        </button>
-      </Modal.Trigger>
+          </button>
+        </Modal.Trigger>
+      </div>
       <Modal.Window name="search">
         <SearchModal />
       </Modal.Window>

@@ -5,7 +5,6 @@ import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { BiDollar } from "react-icons/bi";
 
 import Modal from "./Modal";
 import Button from "../Button";
@@ -41,6 +40,7 @@ enum STEPS {
 const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
   const [step, setStep] = useState(STEPS.CATEGORY);
   const [isLoading, startTransition] = useTransition();
+  const [isLocationPinned, setIsLocationPinned] = useState(false);
   const queryClient = useQueryClient();
   const router = useRouter();
   const {
@@ -53,7 +53,7 @@ const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
     getValues,
   } = useForm<FieldValues>({
     defaultValues: {
-      category: "Beach",
+      category: "Apartments",
       location: null,
       guestCount: 1,
       bathroomCount: 1,
@@ -78,11 +78,22 @@ const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
   );
 
   const setCustomValue = (id: string, value: any) => {
+    if (id === "location") {
+      setIsLocationPinned(false);
+    }
     setValue(id, value, {
       shouldDirty: true,
       shouldTouch: true,
       shouldValidate: true,
     });
+  };
+
+  const onCoordinateSelect = (coordinates: number[]) => {
+    const currentLocation = getValues("location");
+    if (!currentLocation) return;
+
+    setCustomValue("location", { ...currentLocation, latlng: coordinates });
+    setIsLocationPinned(true);
   };
 
   const onBack = () => {
@@ -104,13 +115,14 @@ const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
           queryKey: ["listings"],
         });
         reset();
+        setIsLocationPinned(false);
         setStep(STEPS.CATEGORY);
         onCloseModal?.();
         router.refresh();
         router.push(`/listings/${newListing.id}`);
       } catch (error: any) {
         toast.error("Failed to create listing!");
-        console.log(error?.message)
+        console.log(error?.message);
       }
     });
   };
@@ -126,8 +138,17 @@ const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
             />
             <CountrySelect value={location} onChange={setCustomValue} />
             <div className="h-[240px]">
-              <Map center={location?.latlng} />
+              <Map
+                center={location?.latlng}
+                onCoordinateSelect={onCoordinateSelect}
+                showCenterMarker={isLocationPinned}
+              />
             </div>
+            <p className="-mt-4 text-sm text-neutral-500">
+              {isLocationPinned && location?.latlng?.length === 2
+                ? `Pinned coordinates: ${location.latlng[0].toFixed(5)}, ${location.latlng[1].toFixed(5)}`
+                : "Choose an area, then click the map to pin the exact location."}
+            </p>
           </div>
         );
 
@@ -213,13 +234,12 @@ const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
           <div className="flex flex-col gap-6">
             <Heading
               title="Now, set your price"
-              subtitle="How much do you charge per night?"
+              subtitle="How much do you charge per night in Egyptian pounds?"
             />
             <Input
               key="price"
               id="price"
-              label="Price"
-              icon={BiDollar}
+              label="Nightly price (EGP)"
               type="number"
               disabled={isLoading}
               register={register}
@@ -254,7 +274,9 @@ const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
     }
   };
 
-  const isFieldFilled = !!getValues(steps[step]);
+  const isFieldFilled =
+    !!getValues(steps[step]) &&
+    (step !== STEPS.LOCATION || isLocationPinned);
 
   return (
     <div className="w-full h-full flex flex-col">

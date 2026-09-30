@@ -56,7 +56,7 @@ model Listing {
   userId        String   @db.ObjectId
   price         Int
   country       String?
-  latlng        Int[]
+  latlng        Float[]
   region        String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

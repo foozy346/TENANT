@@ -1,6 +1,6 @@
 # TENANT
 
-This is an Airbnb clone built with Next.js, TypeScript, Tailwind CSS, MongoDB, Prisma, Next auth, Leaflet and many other technologies.
+This is an TENANT built with Next.js, TypeScript, Tailwind CSS, MongoDB, Prisma, Next auth, Leaflet and many other technologies.
 
 ## Features
 
@@ -10,9 +10,9 @@ This is an Airbnb clone built with Next.js, TypeScript, Tailwind CSS, MongoDB, P
 - Search and filtering of properties
 - Interactive map using Leaflet to display property locations
 
-## Demo
+<!-- ## Demo
 
-You can check out a live demo of the Airbnb clone project [here](https://airbnb-clone-phi-green.vercel.app/).
+You can check out a live demo of the TENANT project
 
 ## Screenshots
 
@@ -21,7 +21,7 @@ You can check out a live demo of the Airbnb clone project [here](https://airbnb-
 <kbd><img width="886" alt="login-modal" src="https://github.com/sudeepmahato16/airbnb_clone/assets/122378993/3d6675e0-6046-48dc-b55f-7ef318581ccd"></kbd>
 
 <kbd><img width="810" alt="listing" src="https://github.com/sudeepmahato16/airbnb_clone/assets/122378993/a0b05a50-cbc2-40db-8f62-6cc203a7c887"></kbd>
-
+ -->
 ## Prerequisites
 
 Make sure you have the following software installed on your system:

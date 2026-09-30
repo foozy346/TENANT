@@ -46,6 +46,52 @@ body {
   z-index: 0 !important;
 }
 
+.apartment-map-marker-container {
+  background: transparent;
+  border: 0;
+}
+
+.apartment-map-marker {
+  position: relative;
+  display: flex;
+  width: 132px;
+  height: 46px;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 8px 4px 4px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9999px;
+  background: white;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 20%);
+  color: #171717;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.apartment-map-marker::after {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform: translateX(-50%);
+  border-top: 10px solid white;
+  border-right: 8px solid transparent;
+  border-left: 8px solid transparent;
+  content: "";
+  filter: drop-shadow(0 2px 1px rgb(0 0 0 / 14%));
+}
+
+.apartment-map-marker img {
+  display: block;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 .rdrMonth {
   width: 100% !important;
 }

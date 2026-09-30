@@ -183,7 +183,7 @@ export const createPaymentSession = async ({
     name: "Listing",
     images: [listing.imageSrc],
     default_price_data: {
-      currency: "USD",
+      currency: "egp",
       unit_amount: totalPrice * 100
     }
   })
@@ -194,7 +194,7 @@ export const createPaymentSession = async ({
     payment_method_types: ['card'],
     mode: 'payment',
     shipping_address_collection: {
-      allowed_countries: ["DE", "US", "NP", "CH", "BH", "AU"],
+      allowed_countries: ["EG", "DE", "US", "NP", "CH", "BH", "AU"],
     },
     metadata: {
       listingId,
