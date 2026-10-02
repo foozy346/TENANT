@@ -37,6 +37,7 @@ export interface MapListing {
   title: string;
   imageSrc: string;
   price: number;
+  priceType: string | null;
   country: string | null;
   region: string | null;
   latlng: number[];
@@ -114,7 +115,7 @@ const Map: React.FC<MapProps> = ({
     <MapContainer
       center={(center as L.LatLngExpression) || ALEXANDRIA_CENTER}
       zoom={center ? AREA_ZOOM : CITY_ZOOM}
-      scrollWheelZoom={false}
+      scrollWheelZoom={true}
       className={`h-full rounded-lg`}
     >
       <MapView center={center} listings={listings} />
@@ -137,7 +138,7 @@ const Map: React.FC<MapProps> = ({
                     {listing.country}, {listing.region}
                   </span>
                   <span className="font-bold">
-                    {formatPrice(listing.price)} / night
+                    {formatPrice(listing.price)} / {listing.priceType === "monthly" ? "month" : "night"}
                   </span>
                   <Link
                     href={`/listings/${listing.id}`}

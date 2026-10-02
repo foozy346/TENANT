@@ -22,11 +22,13 @@ const ListingPage = async ({ params: { listingId } }: { params: IParams }) => {
   const {
     title,
     imageSrc,
+    imageUrls,
     country,
     region,
     id,
     user: owner,
     price,
+    priceType,
     description,
     roomCount,
     guestCount,
@@ -43,6 +45,7 @@ const ListingPage = async ({ params: { listingId } }: { params: IParams }) => {
         <ListingHead
           title={title}
           image={imageSrc}
+          imageUrls={imageUrls}
           country={country}
           region={region}
           id={id}
@@ -52,6 +55,7 @@ const ListingPage = async ({ params: { listingId } }: { params: IParams }) => {
       <ListingClient
         id={id}
         price={price}
+        priceType={priceType || "nightly"}
         reservations={reservations}
         user={currentUser}
         title={title}

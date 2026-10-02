@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { LISTINGS_BATCH } from "@/utils/constants";
 import { getCurrentUser } from "./user";
 import { stripe } from "@/lib/stripe";
+import { calculateReservationPrice } from "@/utils/helper";
 
 export const getReservations = async (args: Record<string, string>) => {
   try {
@@ -157,14 +158,12 @@ export const createPaymentSession = async ({
   listingId,
   startDate,
   endDate,
-  totalPrice,
 }: {
   listingId: string;
   startDate: Date | undefined;
   endDate: Date | undefined;
-  totalPrice: number;
 }) => {
-  if (!listingId || !startDate || !endDate || !totalPrice)
+  if (!listingId || !startDate || !endDate)
     throw new Error("Invalid data");
 
   const listing = await db.listing.findUnique({
@@ -172,6 +171,13 @@ export const createPaymentSession = async ({
   })
 
   if(!listing) throw new Error("Listing not found!");
+
+  const totalPrice = calculateReservationPrice(
+    listing.price,
+    listing.priceType,
+    startDate,
+    endDate
+  );
 
   const user = await getCurrentUser();
 

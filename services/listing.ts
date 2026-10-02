@@ -132,7 +132,9 @@ export const createListing = async (data: { [x: string]: any }) => {
     bathroomCount,
     roomCount,
     image: imageSrc,
+    imageUrls: uploadedImageUrls,
     price,
+    priceType,
     title,
     description,
   } = data;
@@ -143,6 +145,18 @@ export const createListing = async (data: { [x: string]: any }) => {
     }
   });
 
+  const imageUrls =
+    Array.isArray(uploadedImageUrls) && uploadedImageUrls.length
+      ? uploadedImageUrls
+      : [imageSrc];
+  if (
+    imageUrls.length > 10 ||
+    !imageUrls.every((url: unknown) => typeof url === "string" && url.length > 0) ||
+    !imageUrls.includes(imageSrc)
+  ) {
+    throw new Error("Choose a main photo from the uploaded photos (up to 10).");
+  }
+
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized!");
 
@@ -151,6 +165,7 @@ export const createListing = async (data: { [x: string]: any }) => {
       title,
       description,
       imageSrc,
+      imageUrls,
       category,
       roomCount,
       bathroomCount,
@@ -159,6 +174,7 @@ export const createListing = async (data: { [x: string]: any }) => {
       region,
       latlng,
       price: parseInt(price, 10),
+      priceType: priceType === "monthly" ? "monthly" : "nightly",
       userId: user.id,
     },
   });

@@ -12,6 +12,7 @@ const ApartmentMapPage = async () => {
       title: true,
       imageSrc: true,
       price: true,
+      priceType: true,
       country: true,
       region: true,
       latlng: true,

@@ -59,7 +59,9 @@ const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
       bathroomCount: 1,
       roomCount: 1,
       image: "",
+      imageUrls: [],
       price: "",
+      priceType: "nightly",
       title: "",
       description: "",
     },
@@ -121,13 +123,19 @@ const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
         router.refresh();
         router.push(`/listings/${newListing.id}`);
       } catch (error: any) {
-        toast.error("Failed to create listing!");
-        console.log(error?.message);
+        toast.error(
+          process.env.NODE_ENV === "development" && error?.message
+            ? error.message
+            : "Failed to create listing!"
+        );
+        console.error("Failed to create listing:", error);
       }
     });
   };
 
   const body = () => {
+    const priceType = watch("priceType");
+
     switch (step) {
       case STEPS.LOCATION:
         return (
@@ -189,12 +197,13 @@ const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
         return (
           <div className="flex flex-col gap-6">
             <Heading
-              title="Add a photo of your place"
-              subtitle="Show guests what your place looks like!"
+              title="Add photos of your place"
+              subtitle="Upload up to 10 photos."
             />
             <ImageUpload
               onChange={setCustomValue}
-              initialImage={getValues("image")}
+              initialImages={getValues("imageUrls")}
+              initialMainImage={getValues("image")}
             />
           </div>
         );
@@ -234,12 +243,36 @@ const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
           <div className="flex flex-col gap-6">
             <Heading
               title="Now, set your price"
-              subtitle="How much do you charge per night in Egyptian pounds?"
+              subtitle={
+                priceType === "monthly"
+                  ? "Monthly rates are charged per 30 nights; partial periods are rounded up."
+                  : "Set the amount guests pay for each night."
+              }
             />
+            <div className="grid grid-cols-2 gap-2" role="group" aria-label="Billing frequency">
+              {[
+                { value: "nightly", label: "Nightly" },
+                { value: "monthly", label: "Monthly" },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setCustomValue("priceType", option.value)}
+                  aria-pressed={priceType === option.value}
+                  className={`rounded-md border px-4 py-3 text-sm font-semibold transition ${
+                    priceType === option.value
+                      ? "border-black bg-neutral-100 text-black"
+                      : "border-neutral-200 text-neutral-600 hover:border-neutral-400"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
             <Input
               key="price"
               id="price"
-              label="Nightly price (EGP)"
+              label={`${priceType === "monthly" ? "Monthly" : "Nightly"} price (EGP)`}
               type="number"
               disabled={isLoading}
               register={register}
