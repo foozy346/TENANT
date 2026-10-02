@@ -13,7 +13,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
 import ListingReservation from "./ListingReservation";
-import { createPaymentSession, createReservation } from "@/services/reservation";
+import { createReservation } from "@/services/reservation";
 import { calculateReservationPrice } from "@/utils/helper";
 
 interface ListingClientProps {
@@ -89,15 +89,14 @@ const ListingClient: React.FC<ListingClientProps> = ({
     startTransition(async () => {
       try {
         const { endDate, startDate } = dateRange;
-        const res = await createPaymentSession({
+        await createReservation({
           listingId: id,
           endDate,
           startDate,
         });
-
-        if(res?.url){
-          router.push(res.url);
-        }
+        toast.success("Reservation confirmed!");
+        router.refresh();
+        router.push("/trips");
       } catch (error: any) {
         toast.error(error?.message);
       }
