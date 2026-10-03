@@ -32,7 +32,7 @@ const ListingMenu: FC<ListingMenuProps> = ({ id }) => {
   });
   const [isLoading, startTransition] = useTransition();
 
-  if (pathname === "/" || pathname === "/favorites") return null;
+  if (!pathNameDict[pathname]) return null;
 
   const onConfirm = (onModalClose?: () => void) => {
     startTransition(() => {
@@ -68,7 +68,8 @@ const ListingMenu: FC<ListingMenuProps> = ({ id }) => {
         >
           <button
             type="button"
-            className="w-7 h-7 rounded-full bg-neutral-700/50 flex items-center justify-center hover:bg-neutral-700/70 group transition duration-200 z-[5]"
+            aria-label="Listing actions"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-neutral-700/50 transition duration-200 group-hover:bg-neutral-700/70 z-[5]"
           >
             <BsThreeDots className="h-[18px] w-[18px] text-gray-300 transition duration-100 group-hover:text-gray-100 " />
           </button>

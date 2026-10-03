@@ -6,14 +6,13 @@ import { revalidatePath } from "next/cache";
 
 export const getProperties = async (args?: Record<string, string>) => {
   try {
-    const { userId, cursor } = args || {};
+    const { cursor } = args || {};
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Unauthorized");
 
-    if (!userId) {
-      throw new Error("Unauthorized");
-    }
     const filterQuery: any = {
       where: {
-        userId,
+        userId: user.id,
       },
       take: LISTINGS_BATCH,
       orderBy: { createdAt: "desc" },
@@ -57,12 +56,25 @@ export const deleteProperty = async (listingId: string) => {
       throw new Error("Invalid ID");
     }
 
-    await db.listing.deleteMany({
-      where: {
-        id: listingId,
-        userId: currentUser.id,
-      },
+    const listing = await db.listing.findFirst({
+      where: { id: listingId, userId: currentUser.id },
+      select: { id: true },
     });
+    if (!listing) throw new Error("Listing not found or access denied.");
+
+    const activeReservation = await db.reservation.findFirst({
+      where: {
+        listingId,
+        endDate: { gt: new Date() },
+        OR: [{ status: "pending" }, { status: "accepted" }, { status: null }],
+      },
+      select: { id: true },
+    });
+    if (activeReservation) {
+      throw new Error("This listing has an active or upcoming booking.");
+    }
+
+    await db.listing.deleteMany({ where: { id: listingId, userId: currentUser.id } });
 
     revalidatePath("/");
     revalidatePath("/reservation");
@@ -72,7 +84,7 @@ export const deleteProperty = async (listingId: string) => {
     revalidatePath(`/listings/${listingId}`);
 
     return "success";
-  } catch (error) {
-    throw new Error("Failed to delete the property!");
+  } catch (error: any) {
+    throw new Error(error?.message || "Failed to delete the property!");
   }
 };

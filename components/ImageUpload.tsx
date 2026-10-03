@@ -2,7 +2,7 @@ import React, { ChangeEvent, FC, useState } from "react";
 import Image from "next/image";
 import imageCompression from "browser-image-compression";
 import { FaStar } from "react-icons/fa";
-import { FiX } from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
 import { TbPhotoPlus } from "react-icons/tb";
 import toast from "react-hot-toast";
 
@@ -108,6 +108,20 @@ const ImageUpload: FC<ImageUploadProps> = ({
     onChange("image", nextMainImage);
   };
 
+  const moveImage = (image: string, offset: -1 | 1) => {
+    const index = images.indexOf(image);
+    const targetIndex = index + offset;
+    if (index < 0 || targetIndex < 0 || targetIndex >= images.length) return;
+
+    const nextImages = [...images];
+    [nextImages[index], nextImages[targetIndex]] = [
+      nextImages[targetIndex],
+      nextImages[index],
+    ];
+    setImages(nextImages);
+    onChange("imageUrls", nextImages);
+  };
+
   const onDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     setIsDragging(false);
@@ -149,7 +163,7 @@ const ImageUpload: FC<ImageUploadProps> = ({
               aria-label={isMainImage ? "Main photo" : "Set as main photo"}
               aria-pressed={isMainImage}
               title={isMainImage ? "Main photo" : "Set as main photo"}
-              className={`absolute left-2 top-2 flex h-9 w-9 items-center justify-center rounded-full shadow transition ${
+              className={`absolute left-2 top-2 flex h-11 w-11 items-center justify-center rounded-full shadow transition ${
                 isMainImage
                   ? "bg-primary text-white"
                   : "bg-white text-neutral-600 hover:text-primary"
@@ -162,12 +176,34 @@ const ImageUpload: FC<ImageUploadProps> = ({
                 Main photo
               </span>
             )}
+            <div className="absolute bottom-2 right-2 flex gap-1">
+              <button
+                type="button"
+                onClick={() => moveImage(image, -1)}
+                disabled={index === 0}
+                aria-label={`Move photo ${index + 1} earlier`}
+                title="Move earlier"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-neutral-700 shadow disabled:opacity-40"
+              >
+                <FiChevronLeft aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={() => moveImage(image, 1)}
+                disabled={index === images.length - 1}
+                aria-label={`Move photo ${index + 1} later`}
+                title="Move later"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-neutral-700 shadow disabled:opacity-40"
+              >
+                <FiChevronRight aria-hidden="true" />
+              </button>
+            </div>
             <button
               type="button"
               onClick={() => removeImage(image)}
               aria-label={`Remove photo ${index + 1}`}
               title="Remove photo"
-              className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-white text-neutral-700 shadow hover:bg-neutral-100"
+              className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full bg-white text-neutral-700 shadow hover:bg-neutral-100"
             >
               <FiX aria-hidden="true" />
             </button>

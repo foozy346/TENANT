@@ -36,10 +36,11 @@ const Counter: React.FC<CounterProps> = ({
         <h3 className="font-semibold">{title}</h3>
         <p className="font-light text-gray-600 text-[15.5px]">{subtitle}</p>
       </div>
-      <div className="flex flex-row items-center gap-4">
+      <div className="flex shrink-0 flex-row items-center gap-2 sm:gap-4">
         <button type="button"
           onClick={onReduce}
-          className=" w-8 h-8 rounded-full border-[1px]  border-neutral-400 flex
+          aria-label={`Decrease ${title.toLowerCase()}`}
+          className="h-11 w-11 rounded-full border-[1px] border-neutral-400 flex
           items-center justify-center text-neutral-600 cursor-pointer hover:opacity-80  transition"
         >
           <AiOutlineMinus />
@@ -49,7 +50,8 @@ const Counter: React.FC<CounterProps> = ({
         </span>
         <button type="button"
           onClick={onAdd}
-          className=" w-8 h-8 rounded-full border-[1px] border-neutral-400 flex items-center justify-center  text-neutral-600 cursor-pointer hover:opacity-80 transition"
+          aria-label={`Increase ${title.toLowerCase()}`}
+          className="h-11 w-11 rounded-full border-[1px] border-neutral-400 flex items-center justify-center text-neutral-600 cursor-pointer hover:opacity-80 transition"
           autoFocus={title === "Guests"}
         >
           <AiOutlinePlus />

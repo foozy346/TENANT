@@ -6,12 +6,16 @@ export const dynamic = "force-dynamic";
 
 const ApartmentMapPage = async () => {
   const listings = await db.listing.findMany({
-    where: { category: "Apartments" },
+    where: {
+      category: "Apartments",
+      OR: [{ isHidden: false }, { isHidden: null }],
+    },
     select: {
       id: true,
       title: true,
       imageSrc: true,
       price: true,
+      pricePeriod: true,
       priceType: true,
       country: true,
       region: true,
@@ -26,9 +30,9 @@ const ApartmentMapPage = async () => {
   );
 
   return (
-    <section className="main-container pb-8">
-      <header className="mb-5">
-        <h1 className="text-2xl font-bold text-neutral-900">
+    <section className="main-container flex min-h-[calc(100dvh-6rem)] flex-col pb-4 md:pb-8">
+      <header className="mb-4 shrink-0 sm:mb-5">
+        <h1 className="break-words text-2xl font-bold text-neutral-900">
           Apartments in Alexandria
         </h1>
         <p className="mt-1 text-sm text-neutral-500">
@@ -36,7 +40,7 @@ const ApartmentMapPage = async () => {
         </p>
       </header>
       {mappedListings.length ? (
-        <div className="h-[calc(100vh-260px)] min-h-[420px] overflow-hidden rounded-lg border border-neutral-200">
+        <div className="h-[calc(100dvh-13.5rem)] min-h-[18rem] overflow-hidden rounded-lg border border-neutral-200">
           <MapClient listings={mappedListings} />
         </div>
       ) : (

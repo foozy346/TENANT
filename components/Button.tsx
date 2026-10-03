@@ -18,7 +18,7 @@ const Button: React.FC<ButtonProps> = ({
   return (
     <button
       className={cn(
-        `disabled:opacity-70 disabled:cursor-not-allowed rounded hover:opacity-80 transition w-full border-primary text-white py-[8px] `,
+        `min-h-11 disabled:opacity-70 disabled:cursor-not-allowed rounded hover:opacity-80 transition w-full border-primary text-white py-[8px] `,
         size === "small"
           ? " text-[16px] font-medium border-[1px]"
           : " text-[18px] font-semibold border-2",

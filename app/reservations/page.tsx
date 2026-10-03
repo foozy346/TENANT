@@ -30,7 +30,7 @@ const ReservationPage = async () => {
   return (
     <section className="main-container">
       <Heading title="Reservations" subtitle="Bookings on your properties" backBtn/>
-      <div className=" mt-8 md:mt-10 grid  grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-8">
+      <div className="mt-8 grid grid-cols-1 gap-5 sm:mt-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-8">
         {listings.map((listing) => {
           const { reservation, ...data } = listing;
           const hasFavorited = favorites.includes(listing.id);

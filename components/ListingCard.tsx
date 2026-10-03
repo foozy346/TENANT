@@ -6,7 +6,7 @@ import Skeleton from "react-loading-skeleton";
 
 import HeartButton from "./HeartButton";
 import Image from "./Image";
-import { formatPrice } from "@/utils/helper";
+import { formatPrice, getPricePeriod, getPricePeriodLabel } from "@/utils/helper";
 import ListingMenu from "./ListingMenu";
 
 interface ListingCardProps {
@@ -26,6 +26,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
   hasFavorited,
 }) => {
   const price = reservation ? reservation.totalPrice : data?.price;
+  const pricePeriod = getPricePeriod(data.pricePeriod, data.priceType);
 
   let reservationDate;
   if (reservation) {
@@ -36,12 +37,12 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
   return (
     <div className="relative">
-      <div className="absolute top-0 left-0 p-3 flex items-center justify-between w-full">
+      <div className="absolute inset-x-0 top-0 flex w-full items-center justify-between p-3">
         <div className="z-5">
           <ListingMenu id={reservation?.id || data.id} />
         </div>
 
-        <div className="w-[28px] h-[28px] flex items-center justify-center">
+        <div className="flex h-11 w-11 items-center justify-center">
           <HeartButton
             listingId={data.id}
             key={data.id}
@@ -76,7 +77,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
             </span>
             {!reservation && (
               <span className="font-light">
-                {data.priceType === "monthly" ? "month" : "night"}
+                {getPricePeriodLabel(pricePeriod)}
               </span>
             )}
           </div>
@@ -90,7 +91,7 @@ export default ListingCard;
 
 export const ListingSkeleton = () => {
   return (
-    <div className="col-span-1 ">
+    <div className="col-span-1 min-w-0">
       <div className="flex flex-col gap-1 w-full">
         <Skeleton
           width={"100%"}
@@ -99,7 +100,7 @@ export const ListingSkeleton = () => {
           className="aspect-square"
         />
 
-        <div className="flex flex-row gap-3">
+        <div className="flex min-w-0 flex-row gap-3">
           <Skeleton height={"18px"} width={"84px"} />
           <Skeleton height={"18px"} width={"84px"} />
         </div>

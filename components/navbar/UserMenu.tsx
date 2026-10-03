@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { AiOutlineMenu } from "react-icons/ai";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -19,15 +19,31 @@ interface UserMenuProps {
 
 const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
   const router = useRouter();
+  const [initialModalName, setInitialModalName] = useState("");
+
+  useEffect(() => {
+    if (user || new URLSearchParams(window.location.search).get("auth") !== "login") {
+      return;
+    }
+    setInitialModalName("Login");
+    const searchParams = new URLSearchParams(window.location.search);
+    searchParams.delete("auth");
+    const query = searchParams.toString();
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`
+    );
+  }, [router, user]);
 
   const redirect = (url: string) => {
     router.push(url);
   };
 
   return (
-    <div className="relative">
+    <div className="relative ms-auto shrink-0">
       <div className="flex flex-row items-center gap-3">
-        <Modal>
+        <Modal initialOpenName={initialModalName}>
           <Modal.Trigger name={user ? "share" : "Login"}>
             <button
               type="button"
@@ -40,10 +56,11 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
             <Menu.Toggle id="user-menu">
               <button
                 type="button"
-                className=" p-4 md:py-1 md:px-2 border-[1px]   border-neutral-200  flex  flex-row  items-center   gap-3   rounded-full   cursor-pointer   hover:shadow-md   transition duration-300"
+                aria-label="Open account menu"
+                className="flex h-11 shrink-0 flex-row items-center gap-1.5 rounded-full border border-neutral-200 px-2 transition duration-300 hover:shadow-md md:gap-2.5 md:px-3"
               >
-                <AiOutlineMenu />
-                <div className="block">
+                <AiOutlineMenu className="h-4 w-4 shrink-0" />
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full">
                   <Avatar src={user?.image} />
                 </div>
               </button>
@@ -56,6 +73,8 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
               <hr />
               {user ? (
                 <>
+                  <MenuItem label="Dashboard" onClick={() => redirect("/dashboard")} />
+                  <hr />
                   {menuItems.map((item) => (
                     <MenuItem
                       label={item.label}

@@ -41,7 +41,7 @@ const Input: React.FC<InputProps> = ({
         disabled={disabled}
         {...register(id, { required: true })}
         className={cn(
-          `text-[15px] peer w-full px-2 py-3 font-light bg-white border-[1px] border-gray-400 rounded outline-none transition disabled:opacity-70 disabled:cursor-not-allowed`,
+          `text-base peer w-full px-2 py-3 font-light bg-white border-[1px] border-gray-400 rounded outline-none transition disabled:opacity-70 disabled:cursor-not-allowed`,
           errors[id]
             ? "border-primary focus:border-primary"
             : "border-neutral-300 focus:border-primary",

@@ -1,7 +1,8 @@
 "use client";
-import React, { useMemo, useState, useTransition } from "react";
+import React, { useEffect, useMemo, useState, useTransition } from "react";
 import dynamic from "next/dynamic";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
+import type { Listing } from "@prisma/client";
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -13,11 +14,13 @@ import Heading from "../Heading";
 import Counter from "../inputs/Counter";
 import Input from "../inputs/Input";
 import CategoryButton from "../inputs/CategoryButton";
-import CountrySelect from "../inputs/CountrySelect";
+import CountrySelect, { CountrySelectValue } from "../inputs/CountrySelect";
 import ImageUpload from "../ImageUpload";
 
 import { categories } from "@/utils/constants";
-import { createListing } from "@/services/listing";
+import countries from "@/data/countries.json";
+import { createListing, updateListing } from "@/services/listing";
+import { getPricePeriod } from "@/utils/helper";
 
 const steps = {
   "0": "category",
@@ -37,7 +40,60 @@ enum STEPS {
   PRICE = 5,
 }
 
-const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
+type RentModalProps = {
+  onCloseModal?: () => void;
+  onSaved?: () => void;
+  listing?: Listing | null;
+  mode?: "create" | "edit";
+};
+
+const getFormDefaults = (listing?: Listing | null) => {
+  const savedCountry = listing?.country
+    ? (countries as CountrySelectValue[]).find(
+        (country) => country.label === listing.country
+      )
+    : undefined;
+
+  return {
+    category: listing?.category ?? "Apartments",
+    location: listing?.country
+      ? {
+          flag: savedCountry?.flag ?? "",
+          label: listing.country,
+          region: listing.region ?? savedCountry?.region ?? "Alexandria",
+          value: savedCountry?.value ?? listing.country,
+          latlng: listing.latlng.length === 2 ? listing.latlng : savedCountry?.latlng ?? [],
+        }
+      : null,
+    guestCount: listing?.guestCount ?? 1,
+    bathroomCount: listing?.bathroomCount ?? 1,
+    roomCount: listing?.roomCount ?? 1,
+    image: listing?.imageSrc ?? "",
+    imageUrls: listing?.imageUrls?.length
+      ? listing.imageUrls
+      : listing?.imageSrc
+        ? [listing.imageSrc]
+        : [],
+      price: listing ? String(listing.price) : "",
+      pricePeriod: listing
+        ? getPricePeriod(listing.pricePeriod, listing.priceType)
+        : "monthly",
+    depositAmount: String(listing?.depositAmount ?? 0),
+    furnished: listing?.furnished ?? false,
+    status: listing?.status ?? "available",
+    isHidden: listing?.isHidden ?? false,
+    title: listing?.title ?? "",
+    description: listing?.description ?? "",
+  };
+};
+
+const RentModal = ({
+  onCloseModal,
+  onSaved,
+  listing,
+  mode = "create",
+}: RentModalProps) => {
+  const isEditMode = mode === "edit" && !!listing;
   const [step, setStep] = useState(STEPS.CATEGORY);
   const [isLoading, startTransition] = useTransition();
   const [isLocationPinned, setIsLocationPinned] = useState(false);
@@ -48,24 +104,35 @@ const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
     handleSubmit,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
     reset,
     getValues,
   } = useForm<FieldValues>({
-    defaultValues: {
-      category: "Apartments",
-      location: null,
-      guestCount: 1,
-      bathroomCount: 1,
-      roomCount: 1,
-      image: "",
-      imageUrls: [],
-      price: "",
-      priceType: "nightly",
-      title: "",
-      description: "",
-    },
+    defaultValues: getFormDefaults(listing),
   });
+
+  useEffect(() => {
+    reset(getFormDefaults(listing));
+    setStep(STEPS.CATEGORY);
+    setIsLocationPinned(listing?.latlng.length === 2);
+  }, [listing, reset]);
+
+  useEffect(() => {
+    if (!isEditMode || !isDirty) return;
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warnBeforeUnload);
+    return () => window.removeEventListener("beforeunload", warnBeforeUnload);
+  }, [isDirty, isEditMode]);
+
+  const requestClose = () => {
+    if (isEditMode && isDirty && !window.confirm("Discard unsaved listing changes?")) {
+      return;
+    }
+    onCloseModal?.();
+  };
 
   const location = watch("location");
   const country = location?.label;
@@ -111,12 +178,22 @@ const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
 
     startTransition(async () => {
       try {
+        if (isEditMode && listing) {
+          await updateListing(listing.id, data);
+          toast.success("Listing changes saved.");
+          reset(data);
+          onSaved?.();
+          onCloseModal?.();
+          router.refresh();
+          return;
+        }
+
         const newListing = await createListing(data);
         toast.success(`${data.title} added successfully!`);
         queryClient.invalidateQueries({
           queryKey: ["listings"],
         });
-        reset();
+        reset(getFormDefaults());
         setIsLocationPinned(false);
         setStep(STEPS.CATEGORY);
         onCloseModal?.();
@@ -134,7 +211,7 @@ const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
   };
 
   const body = () => {
-    const priceType = watch("priceType");
+    const pricePeriod = watch("pricePeriod");
 
     switch (step) {
       case STEPS.LOCATION:
@@ -244,25 +321,28 @@ const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
             <Heading
               title="Now, set your price"
               subtitle={
-                priceType === "monthly"
-                  ? "Monthly rates are charged per 30 nights; partial periods are rounded up."
-                  : "Set the amount guests pay for each night."
+                pricePeriod === "monthly"
+                  ? "Set the price for each calendar month."
+                  : pricePeriod === "weekly"
+                    ? "Set the price for each 7-night period."
+                    : "Set the amount guests pay for each night."
               }
             />
-            <div className="grid grid-cols-2 gap-2" role="group" aria-label="Billing frequency">
+            <div className="grid grid-cols-3 gap-2" role="group" aria-label="Rental price period">
               {[
-                { value: "nightly", label: "Nightly" },
                 { value: "monthly", label: "Monthly" },
+                { value: "weekly", label: "Weekly" },
+                { value: "nightly", label: "Nightly" },
               ].map((option) => (
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => setCustomValue("priceType", option.value)}
-                  aria-pressed={priceType === option.value}
+                  onClick={() => setCustomValue("pricePeriod", option.value)}
+                  aria-pressed={pricePeriod === option.value}
                   className={`rounded-md border px-4 py-3 text-sm font-semibold transition ${
-                    priceType === option.value
-                      ? "border-black bg-neutral-100 text-black"
-                      : "border-neutral-200 text-neutral-600 hover:border-neutral-400"
+                    pricePeriod === option.value
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-neutral-200 text-neutral-600 hover:border-primary"
                   }`}
                 >
                   {option.label}
@@ -272,7 +352,7 @@ const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
             <Input
               key="price"
               id="price"
-              label={`${priceType === "monthly" ? "Monthly" : "Nightly"} price (EGP)`}
+              label={`${pricePeriod === "monthly" ? "Monthly" : pricePeriod === "weekly" ? "Weekly" : "Nightly"} price (EGP)`}
               type="number"
               disabled={isLoading}
               register={register}
@@ -281,6 +361,50 @@ const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
               watch={watch}
               autoFocus
             />
+            <Input
+              id="depositAmount"
+              label="Deposit (EGP)"
+              type="number"
+              min={0}
+              disabled={isLoading}
+              register={register}
+              errors={errors}
+              watch={watch}
+            />
+            <label className="flex min-h-11 items-center gap-3 text-sm font-medium text-neutral-800">
+              <input
+                type="checkbox"
+                className="h-5 w-5 accent-[var(--primary)]"
+                disabled={isLoading}
+                {...register("furnished")}
+              />
+              Furnished
+            </label>
+            {isEditMode && (
+              <>
+                <label className="block space-y-1.5">
+                  <span className="text-sm font-semibold">Listing status</span>
+                  <select
+                    disabled={isLoading}
+                    {...register("status")}
+                    className="h-11 w-full rounded-md border border-neutral-300 bg-white px-3 text-base"
+                  >
+                    <option value="available">Available</option>
+                    <option value="reserved" disabled>Reserved by an accepted booking</option>
+                    <option value="rented">Rented</option>
+                  </select>
+                </label>
+                <label className="flex min-h-11 items-center gap-3 text-sm font-medium text-neutral-800">
+                  <input
+                    type="checkbox"
+                    className="h-5 w-5 accent-[var(--primary)]"
+                    disabled={isLoading}
+                    {...register("isHidden")}
+                  />
+                  Hide this listing from guests
+                </label>
+              </>
+            )}
           </div>
         );
 
@@ -312,15 +436,30 @@ const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
     (step !== STEPS.LOCATION || isLocationPinned);
 
   return (
-    <div className="w-full h-full flex flex-col">
-      <Modal.WindowHeader title="Share your home!" />
+    <div className="flex h-full min-h-0 w-full flex-col">
+      <Modal.WindowHeader
+        title={isEditMode ? "Edit listing" : "Share your home!"}
+        onRequestClose={requestClose}
+      />
       <form
-        className="flex-1  md:h-auto border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none "
+        className="relative flex min-h-0 flex-1 flex-col border-0 bg-white outline-none focus:outline-none"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <div className="relative p-6">{body()}</div>
-        <div className="flex flex-col gap-2 px-6 pb-6 pt-3">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
+          {body()}
+        </div>
+        <div className="shrink-0 border-t border-neutral-200 bg-white px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-6 md:pb-5">
           <div className="flex flex-row items-center gap-4 w-full">
+            {isEditMode && (
+              <Button
+                type="button"
+                className="flex min-h-11 items-center justify-center"
+                onClick={requestClose}
+                outline
+              >
+                Cancel
+              </Button>
+            )}
             {step !== STEPS.CATEGORY ? (
               <Button
                 type="button"
@@ -339,7 +478,7 @@ const RentModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
               {isLoading ? (
                 <SpinnerMini />
               ) : step === STEPS.PRICE ? (
-                "Create"
+                isEditMode ? "Save" : "Create"
               ) : (
                 "Next"
               )}

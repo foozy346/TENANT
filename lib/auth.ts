@@ -63,10 +63,23 @@ export const authOptions: AuthOptions = {
       return session;
     },
 
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         return { ...token, ...user };
       }
+
+      if (trigger === "update" && token.id) {
+        const currentUser = await db.user.findUnique({
+          where: { id: token.id },
+          select: { name: true, email: true, image: true },
+        });
+        if (currentUser) {
+          token.name = currentUser.name;
+          token.email = currentUser.email;
+          token.picture = currentUser.image;
+        }
+      }
+
       return token;
     },
   },

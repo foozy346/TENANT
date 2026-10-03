@@ -108,7 +108,7 @@ const Button: FC<ButtonProps> = ({ children, onClick, className }) => {
       <button
         onClick={handleClick}
         type="button"
-        className={cn("text-left px-4 py-3 w-full", className)}
+        className={cn("min-h-11 w-full px-4 py-3 text-left", className)}
       >
         {children}
       </button>

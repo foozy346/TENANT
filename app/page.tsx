@@ -27,7 +27,7 @@ const Home: FC<HomeProps> = async ({ searchParams }) => {
   }
 
   return (
-    <section className=" main-container pt-16 grid  grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-8">
+    <section className="main-container grid grid-cols-1 gap-5 pt-16 sm:grid-cols-2 md:grid-cols-3 lg:gap-8 lg:grid-cols-4">
       {listings.map((listing) => {
         const hasFavorited = favorites.includes(listing.id);
         return (

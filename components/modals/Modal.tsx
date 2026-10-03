@@ -21,6 +21,7 @@ import { fadeIn, slideIn } from "@/utils/motion";
 
 interface ModalProps {
   children: ReactNode;
+  initialOpenName?: string;
 }
 
 interface TriggerProps {
@@ -28,10 +29,14 @@ interface TriggerProps {
   children: ReactElement;
 }
 
-interface WindowProps extends TriggerProps { }
+interface WindowProps extends TriggerProps {
+  dismissOnOutside?: boolean;
+  dismissOnEscape?: boolean;
+}
 
 interface WindowHeaderProps {
   title: string;
+  onRequestClose?: () => void;
 }
 
 const ModalContext = createContext({
@@ -44,8 +49,12 @@ const Modal: FC<ModalProps> & {
   Trigger: typeof Trigger;
   Window: typeof Window;
   WindowHeader: typeof WindowHeader;
-} = ({ children }) => {
-  const [openName, setOpenName] = useState("");
+} = ({ children, initialOpenName = "" }) => {
+  const [openName, setOpenName] = useState(initialOpenName);
+
+  useEffect(() => {
+    if (initialOpenName) setOpenName(initialOpenName);
+  }, [initialOpenName]);
 
   const close = useCallback(() => {
     setOpenName("");
@@ -67,45 +76,56 @@ const Modal: FC<ModalProps> & {
 
 const Trigger: FC<TriggerProps> = ({ children, name }) => {
   const { open } = useContext(ModalContext);
-  const onClick = (e: MouseEvent | TouchEvent) => {
+  const childOnClick = children.props.onClick as
+    | ((event: React.MouseEvent<HTMLElement>) => void)
+    | undefined;
+  const onClick = (event: React.MouseEvent<HTMLElement>) => {
+    childOnClick?.(event);
+    if (event.defaultPrevented) return;
     open(name);
   };
   return cloneElement(children, { onClick });
 };
 
-const Window: FC<WindowProps> = ({ children, name }) => {
+const Window: FC<WindowProps> = ({
+  children,
+  name,
+  dismissOnOutside = true,
+  dismissOnEscape = true,
+}) => {
   const { openName, close } = useContext(ModalContext);
   const isWindowOpen = openName === name;
   const { ref } = useOutsideClick({
     action: close,
-    enable: isWindowOpen,
+    enable: isWindowOpen && dismissOnOutside,
   });
 
   useKeyPress({
     key: "Escape",
     action: close,
-    enable: isWindowOpen
+    enable: isWindowOpen && dismissOnEscape
   })
 
   const isClient = useIsClient();
 
 
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient || !isWindowOpen) return;
     const body = document.body;
-    const rootNode = document.documentElement;
-    if (isWindowOpen) {
-      const scrollTop = rootNode.scrollTop;
-      body.style.top = `-${scrollTop}px`;
-      body.classList.add("no-scroll");
-    } else {
-      const top = parseFloat(body.style.top) * -1;
+    const root = document.documentElement;
+    const scrollTop = window.scrollY;
+    const previousOverflow = root.style.overflow;
+
+    body.style.top = `-${scrollTop}px`;
+    body.classList.add("no-scroll");
+    root.style.overflow = "hidden";
+
+    return () => {
       body.classList.remove("no-scroll");
-      if (top) {
-        rootNode.scrollTop = top;
-        body.style.top = "";
-      }
-    }
+      body.style.top = "";
+      root.style.overflow = previousOverflow;
+      window.scrollTo(0, scrollTop);
+    };
   }, [isClient, isWindowOpen]);
 
   if (!isClient) return null;
@@ -118,20 +138,18 @@ const Window: FC<WindowProps> = ({ children, name }) => {
           animate="show"
           initial="hidden"
           exit="hidden"
-          className="justify-center items-center flex w-full h-full overflow-hidden  fixed inset-0 z-50 outline-none focus:outline-none bg-neutral-800/70"
+          className="fixed inset-0 z-[60] flex h-[100dvh] w-full items-stretch justify-center overflow-hidden bg-neutral-800/70 outline-none focus:outline-none md:items-center md:p-4"
         >
-          <div className="relative ">
-            <motion.div
-              variants={slideIn("up", "tween", 0.3)}
-              initial="hidden"
-              animate="show"
-              exit="hidden"
-              className="md:h-auto h-screen md:max-h-screen overflow-y-auto rounded-lg shadow-lg w-screen bg-white md:w-[420px]"
-              ref={ref}
-            >
-              {cloneElement(children, { onCloseModal: close })}
-            </motion.div>
-          </div>
+          <motion.div
+            variants={slideIn("up", "tween", 0.3)}
+            initial="hidden"
+            animate="show"
+            exit="hidden"
+            className="flex h-[100dvh] min-h-0 w-full flex-col overflow-hidden bg-white pt-[env(safe-area-inset-top)] shadow-lg md:h-auto md:max-h-[calc(100dvh-2rem)] md:max-w-[420px] md:rounded-lg md:pt-0"
+            ref={ref}
+          >
+            {cloneElement(children, { onCloseModal: close })}
+          </motion.div>
         </motion.div>
       ) : null}
     </AnimatePresence>,
@@ -139,18 +157,21 @@ const Window: FC<WindowProps> = ({ children, name }) => {
   );
 };
 
-const WindowHeader: FC<WindowHeaderProps> = ({ title }) => {
+const WindowHeader: FC<WindowHeaderProps> = ({ title, onRequestClose }) => {
   const { close } = useContext(ModalContext);
   return (
-    <header className=" flex items-center  px-6 py-3  rounded-t justify-center relative border-b-[1px]">
+    <header className="relative flex h-14 shrink-0 items-center justify-center border-b border-neutral-200 px-4">
       <button
         type="button"
-        className=" p-1 border-0  hover:opacity-70 transition absolute left-6"
-        onClick={close}
+        aria-label="Close dialog"
+        className="absolute start-2 flex h-11 w-11 items-center justify-center rounded-full border-0 transition hover:bg-neutral-100"
+        onClick={onRequestClose ?? close}
       >
-        <IoMdClose size={18} />
+        <IoMdClose size={20} />
       </button>
-      <h4 className="text-[18px] font-semibold">{title}</h4>
+      <h4 className="max-w-[calc(100%-3.5rem)] truncate text-lg font-semibold">
+        {title}
+      </h4>
     </header>
   );
 };

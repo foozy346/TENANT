@@ -11,9 +11,9 @@ const Navbar: React.FC<NavbarProps> = async () => {
   const user = await getCurrentUser();
 
   return (
-    <header className="fixed top-0 left-0 w-full bg-white z-10 ">
-      <nav className="py-3 border-b-[1px]">
-        <div className="flex main-container flex-row justify-between items-center gap-3 md:gap-0">
+    <header className="fixed left-0 top-0 z-30 w-full bg-white">
+      <nav className="border-b-[1px] py-2 sm:py-3">
+        <div className="main-container flex min-w-0 flex-row items-center gap-2">
           <Logo />
           <Suspense fallback={<></>}>
             <Search />

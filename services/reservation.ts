@@ -5,24 +5,20 @@ import { Listing, Reservation } from "@prisma/client";
 import { db } from "@/lib/db";
 import { LISTINGS_BATCH } from "@/utils/constants";
 import { getCurrentUser } from "./user";
-import { calculateReservationPrice } from "@/utils/helper";
+import { calculateReservationPrice, getPricePeriod } from "@/utils/helper";
 
 export const getReservations = async (args: Record<string, string>) => {
   try {
-    const { listingId, userId, authorId, cursor } = args;
+    const { listingId, authorId, cursor } = args;
+    const currentUser = await getCurrentUser();
+    if (!currentUser) throw new Error("Unauthorized");
 
-    const where: any = {};
-
-    if (userId) {
-      where.userId = userId;
-    }
+    const where: any = authorId
+      ? { listing: { userId: currentUser.id } }
+      : { userId: currentUser.id };
 
     if (listingId) {
       where.listingId = listingId;
-    }
-
-    if (authorId) {
-      where.listing = { userId: authorId };
     }
 
     const filterQuery: any = {
@@ -96,12 +92,20 @@ export const createReservation = async ({
 
     const listing = await db.listing.findUnique({ where: { id: listingId } });
     if (!listing) throw new Error("Listing not found!");
+    if (listing.isHidden || listing.status === "rented") {
+      throw new Error("This listing is not accepting new bookings.");
+    }
 
     const conflictingReservation = await db.reservation.findFirst({
       where: {
         listingId,
         startDate: { lt: endDate },
         endDate: { gt: startDate },
+        OR: [
+          { status: "pending" },
+          { status: "accepted" },
+          { status: null },
+        ],
       },
       select: { id: true },
     });
@@ -111,7 +115,7 @@ export const createReservation = async ({
 
     const totalPrice = calculateReservationPrice(
       listing.price,
-      listing.priceType,
+      getPricePeriod(listing.pricePeriod, listing.priceType),
       startDate,
       endDate
     );
@@ -123,6 +127,7 @@ export const createReservation = async ({
         startDate,
         endDate,
         totalPrice,
+        status: "pending",
       },
     });
 
@@ -148,15 +153,33 @@ export const deleteReservation = async (reservationId: string) => {
     });
     if (!reservation) throw new Error("Reservation not found!");
 
-    await db.reservation.deleteMany({
-      where: {
-        id: reservationId,
-        OR: [
-          { userId: currentUser.id },
-          { listing: { userId: currentUser.id } },
-        ],
-      },
-    });
+    const status = reservation.status ?? "accepted";
+    if (reservation.userId === currentUser.id) {
+      if (
+        status !== "pending" &&
+        !(status === "accepted" && reservation.startDate > new Date())
+      ) {
+        throw new Error("Only pending or upcoming bookings can be cancelled.");
+      }
+
+      await db.reservation.updateMany({
+        where: { id: reservationId, userId: currentUser.id },
+        data: { status: "cancelled" },
+      });
+    } else {
+      const listing = await db.listing.findFirst({
+        where: { id: reservation.listingId, userId: currentUser.id },
+        select: { id: true },
+      });
+      if (!listing || status !== "pending") {
+        throw new Error("Reservation not found or access denied.");
+      }
+
+      await db.reservation.updateMany({
+        where: { id: reservationId, listingId: listing.id, status: "pending" },
+        data: { status: "rejected" },
+      });
+    }
 
     revalidatePath("/reservations");
     revalidatePath(`/listings/${reservation.listingId}`);

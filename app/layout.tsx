@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Nunito } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 
@@ -13,6 +13,12 @@ export const metadata: Metadata = {
   title: "TENANT",
   description:
     "Discover unique stays and plan your next trip with TENANT.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

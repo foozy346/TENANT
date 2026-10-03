@@ -12,10 +12,13 @@ import {
   useMap,
   useMapEvents,
 } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
+import "react-leaflet-cluster/dist/assets/MarkerCluster.css";
+import "react-leaflet-cluster/dist/assets/MarkerCluster.Default.css";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import marketIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
-import { formatPrice } from "@/utils/helper";
+import { formatPrice, getPricePeriod, getPricePeriodLabel } from "@/utils/helper";
 
 // @ts-ignore
 delete L.Icon.Default.prototype._getIconUrl;
@@ -37,6 +40,7 @@ export interface MapListing {
   title: string;
   imageSrc: string;
   price: number;
+  pricePeriod?: string | null;
   priceType: string | null;
   country: string | null;
   region: string | null;
@@ -125,7 +129,8 @@ const Map: React.FC<MapProps> = ({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {listings?.length ? (
-        listings.map((listing) => (
+        <MarkerClusterGroup chunkedLoading>
+          {listings.map((listing) => (
             <Marker
               key={listing.id}
               position={listing.latlng as L.LatLngExpression}
@@ -133,23 +138,29 @@ const Map: React.FC<MapProps> = ({
             >
               <Popup>
                 <div className="flex min-w-44 flex-col gap-1 text-sm">
-                  <span className="font-semibold">{listing.title}</span>
+                  <span className="break-words font-semibold">
+                    {listing.title}
+                  </span>
                   <span className="text-neutral-500">
                     {listing.country}, {listing.region}
                   </span>
                   <span className="font-bold">
-                    {formatPrice(listing.price)} / {listing.priceType === "monthly" ? "month" : "night"}
+                    {formatPrice(listing.price)} /{" "}
+                    {getPricePeriodLabel(
+                      getPricePeriod(listing.pricePeriod, listing.priceType)
+                    )}
                   </span>
                   <Link
                     href={`/listings/${listing.id}`}
-                    className="mt-1 font-semibold text-primary underline"
+                    className="mt-1 inline-flex min-h-11 items-center font-semibold text-primary underline"
                   >
                     View apartment
                   </Link>
                 </div>
               </Popup>
             </Marker>
-          ))
+          ))}
+        </MarkerClusterGroup>
       ) : center && showCenterMarker ? (
         <Marker position={center as L.LatLngExpression} />
       ) : null}

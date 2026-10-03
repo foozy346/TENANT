@@ -15,10 +15,14 @@ const Heading: React.FC<HeadingProps> = ({
   backBtn = false,
 }) => {
   return (
-    <div className="flex items-center justify-between">
-      <div className={center ? "text-center" : "text-start"}>
-        <h3 className="text-2xl font-bold leading-[1.25]">{title}</h3>
-        <p className="font-light text-neutral-500 md:mt-1 mt-2">{subtitle}</p>
+    <div className="flex min-w-0 items-center justify-between gap-3">
+      <div className={`min-w-0 flex-1 ${center ? "text-center" : "text-start"}`}>
+        <h3 className="break-words text-[22px] font-bold leading-[1.25] sm:text-2xl">
+          {title}
+        </h3>
+        <p className="mt-2 break-words font-light text-neutral-500 md:mt-1">
+          {subtitle}
+        </p>
       </div>
       {backBtn ? <BackButton /> : null}
     </div>

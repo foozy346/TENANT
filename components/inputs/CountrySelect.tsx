@@ -50,9 +50,13 @@ const CountrySelect = ({
         </div>
       )}
       classNames={{
-        control: () => "p-[6px] text-[14px] border-1",
-        input: () => "text-[14px]",
-        option: () => "text-[14px]",
+        control: () => "min-h-11 text-base",
+        input: () => "text-base",
+        option: () => "text-base",
+      }}
+      styles={{
+        control: (base) => ({ ...base, minHeight: 44 }),
+        input: (base) => ({ ...base, fontSize: 16 }),
       }}
       theme={(theme) => ({
         ...theme,

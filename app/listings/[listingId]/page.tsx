@@ -8,6 +8,7 @@ import ListingClient from "./_components/ListingClient";
 import { getCurrentUser } from "@/services/user";
 import { getListingById } from "@/services/listing";
 import { categories } from "@/utils/constants";
+import { getPricePeriod } from "@/utils/helper";
 
 interface IParams {
   listingId: string;
@@ -28,6 +29,7 @@ const ListingPage = async ({ params: { listingId } }: { params: IParams }) => {
     id,
     user: owner,
     price,
+    pricePeriod,
     priceType,
     description,
     roomCount,
@@ -40,7 +42,7 @@ const ListingPage = async ({ params: { listingId } }: { params: IParams }) => {
   const category = categories.find((cate) => cate.label === listing.category);
 
   return (
-    <section className="main-container">
+    <section className="main-container pb-28 md:pb-0">
       <div className="flex flex-col gap-6">
         <ListingHead
           title={title}
@@ -55,7 +57,7 @@ const ListingPage = async ({ params: { listingId } }: { params: IParams }) => {
       <ListingClient
         id={id}
         price={price}
-        priceType={priceType || "nightly"}
+        priceType={getPricePeriod(pricePeriod, priceType)}
         reservations={reservations}
         user={currentUser}
         title={title}

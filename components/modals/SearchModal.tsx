@@ -178,14 +178,16 @@ const SearchModal = ({ onCloseModal }: { onCloseModal?: () => void }) => {
   const isFieldFilled = !!getValues(steps[step]);
 
   return (
-    <div className="h-full w-full bg-white flex flex-col">
+    <div className="flex h-full min-h-0 w-full flex-col bg-white">
       <Modal.WindowHeader title="Filter" />
       <form
-        className="h-auto flex-1 border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none "
+        className="relative flex min-h-0 flex-1 flex-col border-0 bg-white outline-none focus:outline-none"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <div className="relative p-6">{body()}</div>
-        <div className="flex flex-col gap-2 px-6 pb-6 pt-3">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
+          {body()}
+        </div>
+        <div className="shrink-0 border-t border-neutral-200 bg-white px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-6 md:pb-5">
           <div className="flex flex-row items-center gap-4 w-full">
             {step !== STEPS.LOCATION ? (
               <Button

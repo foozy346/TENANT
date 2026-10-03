@@ -82,7 +82,7 @@ const Calendar: React.FC<CalendarProps> = ({
             aria-label="Previous year"
             onClick={() => setCalendarYear((year) => year - 1)}
             disabled={calendarYear <= minimumMonth.getFullYear()}
-            className="rounded p-2 text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-11 w-11 items-center justify-center rounded text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <AiOutlineLeft />
           </button>
@@ -91,7 +91,7 @@ const Calendar: React.FC<CalendarProps> = ({
             type="button"
             aria-label="Next year"
             onClick={() => setCalendarYear((year) => year + 1)}
-            className="rounded p-2 text-neutral-700 hover:bg-neutral-100"
+            className="flex h-11 w-11 items-center justify-center rounded text-neutral-700 hover:bg-neutral-100"
           >
             <AiOutlineRight />
           </button>

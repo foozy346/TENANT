@@ -1,7 +1,9 @@
 "use server";
+import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { LISTINGS_BATCH } from "@/utils/constants";
 import { getCurrentUser } from "./user";
+import { getPricePeriod } from "@/utils/helper";
 
 export const getListings = async (query?: {
   [key: string]: string | string[] | undefined | null;
@@ -19,10 +21,16 @@ export const getListings = async (query?: {
       cursor,
     } = query || {};
 
-    let where: any = {};
+    let where: any = {
+      OR: [{ isHidden: false }, { isHidden: null }],
+    };
 
     if (userId) {
-      where.userId = userId;
+      const currentUser = await getCurrentUser();
+      if (!currentUser || currentUser.id !== userId) {
+        return { listings: [], nextCursor: null };
+      }
+      where.userId = currentUser.id;
     }
 
     if (category) {
@@ -55,16 +63,27 @@ export const getListings = async (query?: {
       where.NOT = {
         reservations: {
           some: {
-            OR: [
-              {
-                endDate: { gte: startDate },
-                startDate: { lte: startDate },
-              },
-              {
-                startDate: { lte: endDate },
-                endDate: { gte: endDate },
-              },
-            ],
+              AND: [
+                {
+                  OR: [
+                    { status: "pending" },
+                    { status: "accepted" },
+                    { status: null },
+                  ],
+                },
+                {
+                  OR: [
+                    {
+                      endDate: { gte: startDate },
+                      startDate: { lte: startDate },
+                    },
+                    {
+                      startDate: { lte: endDate },
+                      endDate: { gte: endDate },
+                    },
+                  ],
+                },
+              ],
           },
         },
       };
@@ -113,6 +132,13 @@ export const getListingById = async (id: string) => {
         },
       },
       reservations: {
+        where: {
+          OR: [
+            { status: "pending" },
+            { status: "accepted" },
+            { status: null },
+          ],
+        },
         select: {
           startDate: true,
           endDate: true,
@@ -121,63 +147,166 @@ export const getListingById = async (id: string) => {
     },
   });
 
+  if (!listing) return null;
+
+  if (listing.isHidden) {
+    const currentUser = await getCurrentUser();
+    if (currentUser?.id !== listing.userId) return null;
+  }
+
   return listing;
 };
 
-export const createListing = async (data: { [x: string]: any }) => {
+const normalizeListingInput = (data: Record<string, any>) => {
   const {
     category,
-    location: { region, label: country, latlng },
+    location,
     guestCount,
     bathroomCount,
     roomCount,
     image: imageSrc,
     imageUrls: uploadedImageUrls,
     price,
+    pricePeriod,
     priceType,
+    depositAmount = 0,
+    furnished = false,
+    status = "available",
+    isHidden = false,
     title,
     description,
   } = data;
 
-  Object.keys(data).forEach((value: any) => {
-    if (!data[value]) {
-      throw new Error("Invalid data");
-    }
-  });
+  if (!location || typeof location !== "object") {
+    throw new Error("Choose a location and pin it on the map.");
+  }
+
+  if (
+    typeof title !== "string" ||
+    !title.trim() ||
+    typeof description !== "string" ||
+    !description.trim() ||
+    typeof category !== "string" ||
+    !category.trim()
+  ) {
+    throw new Error("Title, description, and category are required.");
+  }
+
+  const validCount = (value: unknown) =>
+    Number.isInteger(Number(value)) && Number(value) > 0;
+  if (![guestCount, roomCount, bathroomCount].every(validCount)) {
+    throw new Error(
+      "Guest, room, and bathroom counts must be positive whole numbers."
+    );
+  }
+
+  const parsedPrice = Number(price);
+  const parsedDeposit = Number(depositAmount);
+  if (!Number.isInteger(parsedPrice) || parsedPrice <= 0) {
+    throw new Error("Enter a valid price.");
+  }
+  if (!Number.isInteger(parsedDeposit) || parsedDeposit < 0) {
+    throw new Error("Enter a valid deposit amount.");
+  }
+  if (typeof furnished !== "boolean") {
+    throw new Error("Choose whether the place is furnished.");
+  }
+  if (!["available", "reserved", "rented"].includes(status)) {
+    throw new Error("Choose a valid listing status.");
+  }
+  if (typeof isHidden !== "boolean") {
+    throw new Error("Choose whether the listing is visible.");
+  }
+  const normalizedPeriod = getPricePeriod(pricePeriod, priceType);
+
+  const latlng = location.latlng;
+  if (
+    !Array.isArray(latlng) ||
+    latlng.length !== 2 ||
+    !latlng.every((coordinate: unknown) => Number.isFinite(Number(coordinate)))
+  ) {
+    throw new Error("Pin the location on the map.");
+  }
 
   const imageUrls =
     Array.isArray(uploadedImageUrls) && uploadedImageUrls.length
       ? uploadedImageUrls
       : [imageSrc];
   if (
+    typeof imageSrc !== "string" ||
     imageUrls.length > 10 ||
-    !imageUrls.every((url: unknown) => typeof url === "string" && url.length > 0) ||
+    !imageUrls.every(
+      (url: unknown) => typeof url === "string" && url.startsWith("https://")
+    ) ||
     !imageUrls.includes(imageSrc)
   ) {
     throw new Error("Choose a main photo from the uploaded photos (up to 10).");
   }
 
+  return {
+    title: title.trim(),
+    description: description.trim(),
+    imageSrc,
+    imageUrls,
+    category,
+    roomCount: Number(roomCount),
+    bathroomCount: Number(bathroomCount),
+    guestCount: Number(guestCount),
+    country: location.label,
+    region: location.region,
+    latlng: latlng.map(Number),
+    price: parsedPrice,
+    pricePeriod: normalizedPeriod,
+    priceType:
+      normalizedPeriod === "monthly" || normalizedPeriod === "nightly"
+        ? normalizedPeriod
+        : null,
+    depositAmount: parsedDeposit,
+    furnished,
+    status,
+    isHidden,
+  };
+};
+
+export const createListing = async (data: Record<string, any>) => {
+  const listingData = normalizeListingInput(data);
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized!");
 
   const listing = await db.listing.create({
     data: {
-      title,
-      description,
-      imageSrc,
-      imageUrls,
-      category,
-      roomCount,
-      bathroomCount,
-      guestCount,
-      country,
-      region,
-      latlng,
-      price: parseInt(price, 10),
-      priceType: priceType === "monthly" ? "monthly" : "nightly",
+      ...listingData,
+      status: "available",
+      isHidden: false,
       userId: user.id,
     },
   });
 
   return listing;
+};
+
+export const updateListing = async (
+  listingId: string,
+  data: Record<string, any>
+) => {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Unauthorized!");
+  if (!listingId || typeof listingId !== "string") {
+    throw new Error("Invalid listing ID.");
+  }
+
+  const listingData = normalizeListingInput(data);
+  const result = await db.listing.updateMany({
+    where: { id: listingId, userId: user.id },
+    data: listingData,
+  });
+  if (!result.count) throw new Error("Listing not found or access denied.");
+
+  await Promise.all([
+    revalidatePath(`/listings/${listingId}`),
+    revalidatePath("/dashboard"),
+    revalidatePath("/"),
+  ]);
+
+  return db.listing.findUnique({ where: { id: listingId } });
 };

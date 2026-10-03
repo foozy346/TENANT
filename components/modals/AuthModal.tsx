@@ -99,103 +99,88 @@ const AuthModal = ({
   };
 
   return (
-    <div className="h-full w-full">
+    <div className="flex h-full min-h-0 w-full flex-col">
       <Modal.WindowHeader title={title} />
 
       <form
-        className="flex flex-col gap-5 p-6 pb-0 w-full h-full"
+        className="flex min-h-0 flex-1 flex-col"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <Heading
-          title={!isLoginModal ? "Welcome to TENANT" : "Welcome back"}
-          subtitle={
-            title === "Sign up"
-              ? "Create an account!"
-              : "Login to your account!"
-          }
-        />
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-4 sm:p-6">
+          <Heading
+            title={!isLoginModal ? "Welcome to TENANT" : "Welcome back"}
+            subtitle={
+              title === "Sign up"
+                ? "Create an account!"
+                : "Login to your account!"
+            }
+          />
 
-        {!isLoginModal && (
+          {!isLoginModal && (
+            <Input
+              id="name"
+              label="Name"
+              disabled={isLoading}
+              register={register}
+              errors={errors}
+              required
+              watch={watch}
+            />
+          )}
+
           <Input
-            id="name"
-            label="Name"
+            id="email"
+            label="Email"
             disabled={isLoading}
             register={register}
             errors={errors}
             required
             watch={watch}
           />
-        )}
 
-        <Input
-          id="email"
-          label="Email"
-          disabled={isLoading}
-          register={register}
-          errors={errors}
-          required
-          watch={watch}
-        />
+          <Input
+            id="password"
+            label="Password"
+            type="password"
+            disabled={isLoading}
+            register={register}
+            errors={errors}
+            required
+            watch={watch}
+          />
+        </div>
 
-        <Input
-          id="password"
-          label="Password"
-          type="password"
-          disabled={isLoading}
-          register={register}
-          errors={errors}
-          required
-          watch={watch}
-        />
+        <div className="shrink-0 space-y-2 border-t border-neutral-200 bg-white px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-6 md:pb-5">
+          <Button type="submit" className="flex h-11 items-center justify-center">
+            {isLoading ? <SpinnerMini className="h-5 w-5" /> : "Continue"}
+          </Button>
 
-        <Button
-          type="submit"
-          className="flex items-center justify-center h-[42px]"
-        >
-          {isLoading ? <SpinnerMini className="w-5 h-5" /> : "Continue"}
-        </Button>
-      </form>
-      <div className="flex flex-col gap-4 mt-3 p-6 pt-0">
-        <hr />
-        <Button
-          outline
-          onClick={() => signIn("google")}
-          className="flex flex-row justify-center gap-2 items-center px-3 py-2"
-        >
-          <FcGoogle className="w-6 h-6" />
-          <span className="text-[14px]">Continue with Google</span>
-        </Button>
+          <Button
+            type="button"
+            outline
+            onClick={() => signIn("google")}
+            className="flex h-11 flex-row items-center justify-center gap-2 px-3 py-2"
+          >
+            <FcGoogle className="h-6 w-6" />
+            <span>Continue with Google</span>
+          </Button>
 
-        <div
-          className="
-            text-neutral-500 
-          text-center 
-          mt-2 
-          font-light
-        "
-        >
-          <div className="text-[15px]">
-            <small className="text-[15px]">
+          <div className="pt-1 text-center text-sm font-light text-neutral-600">
+            <span>
               {!isLoginModal
                 ? "Already have an account?"
                 : "First time using TENANT?"}
-            </small>
+            </span>
             <button
               type="button"
               onClick={onToggle}
-              className="
-              text-neutral-800
-              cursor-pointer 
-              hover:underline
-              ml-1
-              font-medium
-              "
+              className="ms-1 min-h-11 px-1 font-medium text-neutral-800 hover:underline"
             >
               {!isLoginModal ? "Log in" : "Create an account"}
             </button>
           </div>
         </div>
-      </div>
+      </form>
     </div>
   );
 };

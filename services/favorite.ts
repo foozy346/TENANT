@@ -87,6 +87,7 @@ export const getFavoriteListings = async () => {
         id: {
           in: [...(favoriteIds || [])],
         },
+        OR: [{ isHidden: false }, { isHidden: null }],
       },
     });
 
