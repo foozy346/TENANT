@@ -81,7 +81,6 @@ const Trigger: FC<TriggerProps> = ({ children, name }) => {
     | undefined;
   const onClick = (event: React.MouseEvent<HTMLElement>) => {
     childOnClick?.(event);
-    if (event.defaultPrevented) return;
     open(name);
   };
   return cloneElement(children, { onClick });
